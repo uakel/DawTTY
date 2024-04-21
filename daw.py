@@ -9,6 +9,15 @@ class daw_object:
     def __init__(self):
         pass
 
+    def save(self, name="save.daw"):
+        with open(name, "w") as f:
+            f.write(repr(self))
+
+def load(name="save.daw", where=__main__.__dict__):
+    with open(name, "r") as f:
+        file = f.read()
+    exec(file, where)
+
 class funk(daw_object):
     def __init__(self, f, repr=None):
         if callable(f):
@@ -71,9 +80,6 @@ class funk(daw_object):
                          repr=f"{self.repr}**({other.repr})")
         return funk(lambda t: self.f(t) ** other,
                     repr=f"{self.repr}**{other}")
-    
-    def print_globals(self):
-        print(globals())
 
 class player(funk):
     def __init__(self):
@@ -119,13 +125,15 @@ class player(funk):
 
     def __repr__(self):
         name_of_global = {o: n for n, o in __main__.__dict__.items() 
-                          if isinstance(o, daw_object) and o != self}
+                          if isinstance(o, daw_object)}
+        name_of_self = name_of_global.pop(self)
         representations = [f"{name_of_global[f]}"
                            if f in name_of_global
                            else f.__repr__()
                            for f in self.inputs]
         nl = "\n"
-        repr = "self < (\n"
+        repr = f"{name_of_self} = player()\n"
+        repr += f"{name_of_self} < (\n"
         for f in self.inputs:
             if f in name_of_global:
                 repr = f"{name_of_global[f]} = {f.__repr__()}\n"\
@@ -154,23 +162,6 @@ class player(funk):
         removed = self.inputs
         self.inputs = []
         return removed
-
-    def save(self, name="save.daw"):
-        with open(name, "w") as f:
-            f.write(repr(self))
-    
-    def load(self, name="save.daw"):
-        f = open(name, "r")
-        file = f.read()
-        lines = file.split("\n")
-        global_declarations = [line for line in lines 
-                               if " = " in line and line[0] != " "]
-        var_names = [line.split(" = ")[0].strip() 
-                     for line in global_declarations]
-        for name in var_names:
-            exec("global " + name)
-        exec(file, globals())
-        f.close()
 
 class square(funk):
     def __init__(self, freq):
@@ -261,11 +252,11 @@ class epiano(funk):
                  base_signal=sine,
                  harmonics_decay=0.5, 
                  harmonics=8):
-        self.repr = f"epiano(\n" \
-                  + f"    freq={freq},\n" \
-                  + f"    base_signal={base_signal.__name__},\n" \
-                  + f"    harmonics_decay={harmonics_decay},\n" \
-                  + f"    harmonics={harmonics}\n)"
+        self.repr = f"epiano(\n"\
+                  + f"    freq={freq},\n"\
+                  + f"    base_signal={base_signal.__name__},\n"\
+                  + f"    harmonics_decay={harmonics_decay},\n"\
+                  + f"    harmonics={harmonics},\n)"
         self.harmonics = [harmonics_decay**i * base_signal(i * freq) for i 
                           in range(1, harmonics + 1)]
 
@@ -276,8 +267,7 @@ def indent_string(s, indent):
     return "\n".join([(" " * indent) + line 
                       for line in s.split("\n")])
 
-p = player()
 try:
-    p.load()
+    load(where=globals())
 except FileNotFoundError as e:
     print(e)
