@@ -57,15 +57,27 @@ class funk(daw_object):
                     repr=f"(-{self.repr})")
 
     def __mul__(self, other):
+        if "+" in self.repr or "-" in self.repr:
+            repr = f"({self.repr})"
+        else:
+            repr = self.repr
         if isinstance(other, funk):
+            if "+" in other.repr or "-" in other.repr:
+                other_repr = f"({other.repr})"
+            else:
+                other_repr = other.repr
             return funk(lambda t: self.f(t) * other.f(t),
-                         repr=f"{self.repr} * {other.repr}")
+                         repr=f"{repr} * {other_repr}")
         return funk(lambda t: self.f(t) * other,
-                    repr=f"{self.repr} * {other}")
+                    repr=f"{repr} * {other}")
     
     def __rmul__(self, other):
+        if "+" in self.repr or "-" in self.repr:
+            repr = f"({self.repr})"
+        else:
+            repr = self.repr
         return funk(lambda t: other * self.f(t),
-                    repr=f"{other} * {self.repr}")
+                    repr=f"{other} * {repr}")
 
     def __truediv__(self, other):
         if isinstance(other, funk):
@@ -81,6 +93,7 @@ class funk(daw_object):
         return funk(lambda t: self.f(t) ** other,
                     repr=f"{self.repr}**{other}")
 
+from .utils import _indent_string
 class player(funk):
     def __init__(self):
         self.inputs = []
@@ -138,11 +151,11 @@ class player(funk):
             if f in name_of_global:
                 repr = f"{name_of_global[f]} = {f.__repr__()}\n"\
                      + repr \
-                     + indent_string(
+                     + _indent_string(
                         name_of_global[f], 4
                        )
             else:
-                repr += indent_string(f.__repr__(), 4)                    
+                repr += _indent_string(f.__repr__(), 4)                    
             repr += ",\n"
         repr += ")"
         return repr
@@ -162,110 +175,6 @@ class player(funk):
         removed = self.inputs
         self.inputs = []
         return removed
-
-class square(funk):
-    def __init__(self, freq):
-        self.freq = freq
-        self.repr = f"square({self.freq})"
-
-    def f(self, t):
-        return np.sign(np.sin(2 * np.pi * self.freq * t))
-    
-class sine(funk):
-    def __init__(self, freq):
-        self.freq = freq
-        self.repr = f"sine({self.freq})"
-
-    def f(self, t):
-        return np.sin(2 * np.pi * self.freq * t)
-
-class saw(funk):
-    def __init__(self, freq):
-        self.freq = freq
-        self.repr = f"saw({self.freq})"
-
-    def f(self, t):
-        return 2 * (t * self.freq - np.floor(t * self.freq)) - 1
-
-class decay(funk):
-    def __init__(self, amount):
-        self.amount = amount
-        self.repr = f"decay({self.amount})"
-
-    def f(self, t):
-        return np.exp(-self.amount * t)
-
-class nnoise(funk):
-    def __init__(self):
-        self.repr = "nnoise()"
-
-    def f(self, t):
-        return np.random.randn(len(t)) / 3
-
-class shotnoise(funk):
-    def __init__(self, rate):
-        self.rate = rate / SAMPLERATE
-        self.repr = f"shotnoise({self.rate})"
-
-    def f(self, t):
-        return np.random.poisson(self.rate, len(t))
-
-class crackle(funk):
-    def __init__(self, rate):
-        self.repr = f"crackle({rate})"
-        self.shot = shotnoise(rate)
-        self.noise = nnoise()
-
-    def f(self, t):
-        return self.shot(t) * self.noise(t)
-
-class vinal(funk):
-    def __init__(self, 
-                 crackle_rate=8, 
-                 crackle_level=1, 
-                 noise_level=0.025,
-                 noise_modulation_freq=1/8,
-                 noise_modulation_amount=0.2):
-        self.repr = f"""vinal(
-    crackle_rate={crackle_rate},
-    crackle_level={crackle_level},
-    noise_level={noise_level},
-    noise_modulation_freq={noise_modulation_freq},
-    noise_modulation_amount={noise_modulation_amount},
-)"""
-        self.crackle_level = crackle_level
-        self.crackle = crackle(crackle_rate)
-        self.noise_level = noise_level
-        self.noise = nnoise()
-        self.noise_modulator = noise_modulation_amount\
-                             * (sine(noise_modulation_freq)**2 - 1)\
-                             + 1
-
-    def f(self, t):
-        return self.crackle_level * self.crackle(t)\
-             + self.noise_level * self.noise(t)\
-             * self.noise_modulator(t)
-
-class epiano(funk):
-    def __init__(self, 
-                 freq=440, 
-                 base_signal=sine,
-                 harmonics_decay=0.5, 
-                 harmonics=8):
-        self.repr = f"epiano(\n"\
-                  + f"    freq={freq},\n"\
-                  + f"    base_signal={base_signal.__name__},\n"\
-                  + f"    harmonics_decay={harmonics_decay},\n"\
-                  + f"    harmonics={harmonics},\n)"
-        self.harmonics = [harmonics_decay**i * base_signal(i * freq) for i 
-                          in range(1, harmonics + 1)]
-
-    def f(self, t):
-        return np.sum([f(t) for f in self.harmonics], axis=0)
-
-def indent_string(s, indent):
-    return "\n".join([(" " * indent) + line 
-                      for line in s.split("\n")])
 
 try:
     load(where=globals())
