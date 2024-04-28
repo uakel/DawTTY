@@ -2,8 +2,8 @@ import numpy as np
 import sounddevice as sd
 import __main__
 
-BLOCK_SIZE = 1024
-SAMPLERATE = 48000
+BLOCK_SIZE =  1_024
+SAMPLERATE = 48_000
 
 class daw_object:
     def __init__(self):
@@ -12,11 +12,6 @@ class daw_object:
     def save(self, name="save.daw"):
         with open(name, "w") as f:
             f.write(repr(self))
-
-def load(name="save.daw", where=__main__.__dict__):
-    with open(name, "r") as f:
-        file = f.read()
-    exec(file, where)
 
 class funk(daw_object):
     def __init__(self, f, repr=None):
@@ -33,6 +28,10 @@ class funk(daw_object):
             self.repr = repr
 
     def __repr__(self):
+        name_of_global = {o: n for n, o in __main__.__dict__.items() 
+                          if isinstance(o, daw_object)}
+        if self in name_of_global:
+            return f"{name_of_global[self]} = {self.repr}"
         return self.repr
 
     def __call__(self, t):
@@ -94,6 +93,7 @@ class funk(daw_object):
                     repr=f"{self.repr}**{other}")
 
 from .utils import _indent_string
+
 class player(funk):
     def __init__(self):
         self.inputs = []
@@ -136,7 +136,8 @@ class player(funk):
     def __gt__(self, other):
         return self.unplug(other)
 
-    def __repr__(self):
+    @property
+    def repr(self):
         name_of_global = {o: n for n, o in __main__.__dict__.items() 
                           if isinstance(o, daw_object)}
         name_of_self = name_of_global.pop(self)
@@ -145,11 +146,10 @@ class player(funk):
                            else f.__repr__()
                            for f in self.inputs]
         nl = "\n"
-        repr = f"{name_of_self} = player()\n"
-        repr += f"{name_of_self} < (\n"
+        repr = f"{name_of_self} < (\n"
         for f in self.inputs:
             if f in name_of_global:
-                repr = f"{name_of_global[f]} = {f.__repr__()}\n"\
+                repr = f"{f.__repr__()}\n"\
                      + repr \
                      + _indent_string(
                         name_of_global[f], 4
@@ -158,6 +158,7 @@ class player(funk):
                 repr += _indent_string(f.__repr__(), 4)                    
             repr += ",\n"
         repr += ")"
+        repr = f"player()\n" + repr
         return repr
 
     def play(self):
@@ -175,8 +176,3 @@ class player(funk):
         removed = self.inputs
         self.inputs = []
         return removed
-
-try:
-    load(where=globals())
-except FileNotFoundError as e:
-    print(e)
