@@ -1,5 +1,5 @@
 import numpy as np
-from .base import funk
+from .base import funk, SAMPLERATE
 
 class square(funk):
     def __init__(self, freq):

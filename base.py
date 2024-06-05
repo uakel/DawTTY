@@ -109,6 +109,9 @@ class player(funk):
     def __call__(self, t):
         return np.sum([f(t) for f in self.inputs], axis=0)
 
+    def __getitem__(self, idx):
+        return self.inputs[idx]
+
     def tick(self, outdata, frames, time, status):
         t_eval = self.t + self.block
         signal = np.sum([f(t_eval) for f in self.inputs], axis=0)
