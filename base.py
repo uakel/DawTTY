@@ -1,6 +1,5 @@
 import numpy as np
 import sounddevice as sd
-import __main__
 
 BLOCK_SIZE =  1_024
 SAMPLERATE = 48_000
@@ -11,7 +10,9 @@ class daw_object:
 
     def save(self, name="save.daw"):
         with open(name, "w") as f:
-            f.write(repr(self))
+            f.write("#!python\n" + repr(self))
+
+from .utils import _get_global_daw_objects
 
 class funk(daw_object):
     def __init__(self, f, repr=None):
@@ -28,10 +29,9 @@ class funk(daw_object):
             self.repr = repr
 
     def __repr__(self):
-        name_of_global = {o: n for n, o in __main__.__dict__.items() 
-                          if isinstance(o, daw_object)}
-        if self in name_of_global:
-            return f"{name_of_global[self]} = {self.repr}"
+        name_of_globals = _get_global_daw_objects()
+        if self in name_of_globals:
+            return f"{name_of_globals[self]} = {self.repr}"
         return self.repr
 
     def __call__(self, t):
@@ -141,8 +141,7 @@ class player(funk):
 
     @property
     def repr(self):
-        name_of_global = {o: n for n, o in __main__.__dict__.items() 
-                          if isinstance(o, daw_object)}
+        name_of_global = _get_global_daw_objects()
         name_of_self = name_of_global.pop(self)
         representations = [f"{name_of_global[f]}"
                            if f in name_of_global

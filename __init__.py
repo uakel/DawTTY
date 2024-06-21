@@ -3,6 +3,7 @@
 from .base import *
 from .oscillators import *
 from .instruments import *
+from .notes import *
 
 import __main__
 
