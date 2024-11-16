@@ -1,13 +1,15 @@
 from .base import funk
 from .oscillators import *
+from typing import *
 
 class crackle(funk):
-    def __init__(self, rate):
-        self.repr = f"crackle({rate})"
+    def __init__(self,
+                 rate: float):
+        self._repr = f"crackle({rate})"
         self.shot = shotnoise(rate)
         self.noise = nnoise()
 
-    def f(self, t):
+    def f(self, t: np.ndarray | float) -> np.ndarray | float:
         return self.shot(t) * self.noise(t)
 
 VINAL_CHRACKLE_RATE = 8
@@ -15,6 +17,7 @@ VINAL_CHRACKLE_LEVEL = 1
 VINAL_NOISE_LEVEL = 0.025
 VINAL_NOISE_MODULATION_FREQ = 1/8
 VINAL_NOISE_MODULATION_AMOUNT = 0.2
+
 class vinal(funk):
     def __init__(self, 
                  crackle_rate=VINAL_CHRACKLE_RATE, 
@@ -34,7 +37,7 @@ class vinal(funk):
             active_args.append(f"noise_modulation_freq={noise_modulation_freq}")
         if noise_modulation_amount != VINAL_NOISE_MODULATION_AMOUNT:
             active_args.append(f"noise_modulation_amount={noise_modulation_amount}")
-        self.repr = f"vinal({', '.join(active_args)})"
+        self._repr = f"vinal({', '.join(active_args)})"
 
 
         self.crackle_level = crackle_level
@@ -50,27 +53,28 @@ class vinal(funk):
              + self.noise_level * self.noise(t)\
              * self.noise_modulator(t)
 
-EPANO_FREQ = 440
-EPANO_BASE_SIGNAL = sine
-EPANO_HARMONICS_DECAY = 0.5
-EPANO_HARMONICS = 8
+E_PIANO_FREQ = 440
+E_PIANO_BASE_SIGNAL = sine
+E_PIANO_HARMONICS_DECAY = 0.5
+E_PIANO_HARMONICS = 8
+
 class epiano(funk):
     def __init__(self, 
-                 freq=EPANO_FREQ, 
-                 base_signal=EPANO_BASE_SIGNAL,
-                 harmonics_decay=EPANO_HARMONICS_DECAY, 
-                 harmonics=EPANO_HARMONICS):
+                 freq=E_PIANO_FREQ, 
+                 base_signal=E_PIANO_BASE_SIGNAL,
+                 harmonics_decay=E_PIANO_HARMONICS_DECAY, 
+                 harmonics=E_PIANO_HARMONICS):
 
         active_args = []
-        if freq != EPANO_FREQ:
+        if freq != E_PIANO_FREQ:
             active_args.append(f"freq={freq}")
-        if base_signal != EPANO_BASE_SIGNAL:
+        if base_signal != E_PIANO_BASE_SIGNAL:
             active_args.append(f"base_signal={base_signal}")
-        if harmonics_decay != EPANO_HARMONICS_DECAY:
+        if harmonics_decay != E_PIANO_HARMONICS_DECAY:
             active_args.append(f"harmonics_decay={harmonics_decay}")
-        if harmonics != EPANO_HARMONICS:
+        if harmonics != E_PIANO_HARMONICS:
             active_args.append(f"harmonics={harmonics}")
-        self.repr = f"epiano({', '.join(active_args)})"
+        self._repr = f"epiano({', '.join(active_args)})"
 
         self.harmonics = [harmonics_decay**i * base_signal(i * freq) for i 
                           in range(1, harmonics + 1)]

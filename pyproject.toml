@@ -1,0 +1,16 @@
+[tool.poetry]
+name = "dawtty"
+version = "0.1.0"
+description = "Your python based digital audio workstation for the terminal"
+authors = ["Leonard Franz <leonardgame666@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+numpy = "^2.1.3"
+sounddevice = "^0.5.1"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
