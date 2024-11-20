@@ -1,8 +1,4 @@
 # DawTTY: Your python based digital audio work station for the terminal
-> You only make techno, if every line of code that makes your techno is written by yourself. Else, you are not making techno.
->
-> -- <cite>totally reasonable techno artists</cite>
-
 Warning: ***Work in Progress!***
 
 DawTTY is nothing more than a library to compose functions into an into an audible signal that can be played over the speaker. Higher level functions then make it possible to generate a piece of music.
